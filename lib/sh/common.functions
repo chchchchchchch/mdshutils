@@ -1,0 +1,491 @@
+
+# GOOD TO KNOW:
+# - where tex body is collected: $TMPTEX (add code with >>)
+# - current line: $LINE
+
+# --------------------------------------------------------------------------- #
+
+function INCLUDEMDSH() {
+
+   CUSTOMFUNCTIONS=$2
+
+ # SAVE ORIGINAL FUNCTIONS 
+   cp $FUNCTIONS $TMPDIR/${FUNCTIONS}.tmp
+ # SAVE PREVIOUS MDXMOD VARIABLE
+   MDXMODOLD=$MDXMOD
+
+   COLLECT="${COLLECT};$1"
+
+   DEPTH=`echo $COLLECT | sed 's,;,\n,g' | wc -l`
+
+ # NEWFUNCTIONS WITHOUT DISABLED INCLUDEMDX
+   cat $TMPDIR/${FUNCTIONS}.tmp              >  $FUNCTIONS
+
+   if [ `echo $CUSTOMFUNCTIONS | wc -c` -gt 2 ]; then
+   cat $CUSTOMFUNCTIONS                      >> $FUNCTIONS
+   fi
+
+ # DISABLE INCLUDEDMX FUNCTION TO PREVENT ENDLESS RECURSION
+   if [ $DEPTH -gt 1 ]; then
+   echo "function INCLUDEMDX() { sleep 0; }" >> $FUNCTIONS
+   fi
+
+   mdsh2TeX $1
+
+ # RESTORE ORIGINAL FUNCTIONS
+   mv $TMPDIR/${FUNCTIONS}.tmp $FUNCTIONS
+   source $FUNCTIONS
+   MDXMOD=$MDXMODOLD
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function NOWSPEAKING() {
+
+  NOWSPEAKING=$1
+
+  if [ X$NOWSPEAKING = XX ]; then
+
+       sleep 0
+
+  fi
+
+  if [ X$WASSPEAKING = XX ]; then
+
+       writeTeXsrc "\textskip"
+       writeTeXsrc "\resetfont"
+  fi
+
+  writeTeXsrc "\\"SP$NOWSPEAKING"{}"
+
+  WASSPEAKING=$NOWSPEAKING
+}
+
+# --------------------------------------------------------------------------- #
+
+function TITLE() {
+
+  # NOT WORKING FOR NESTED DOCUMENTS
+  # TITLE=`grep "^% TITLE:" $MDSHMOD |  tail -1 | \
+  #        cut -d ":" -f 2- | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
+
+
+  TITLE=`echo $1 | sed 's/_/ /g' | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
+
+  TITLENAME=`echo $TITLE | \
+             sed 's/[^a-zA-Z0-9 ]//g' | \
+             sed 's/ /_/g' | \
+             tr [:upper:] [:lower:]`
+
+  # echo $TITLENAME >> titlenames.txt
+
+  CUSTOMSTY=`find . -name "${TITLENAME}.sty" | \
+             head -n 1 | \
+             cut -d "/" -f 2-`
+
+  if [ `echo $CUSTOMSTY | wc -c` -gt 3 ]; then
+  writeTeXsrc "\input{$CUSTOMSTY}"
+  else
+  writeTeXsrc "\input{lib/tex/interview_reset.sty}"
+  fi
+
+  writeTeXsrc "\cleardoublepage"
+  writeTeXsrc "\setcounter{footnote}{0}"
+  writeTeXsrc "\invisiblechapter{$TITLE}"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function INCLUDEPAGES() {
+
+   URL=$1
+
+   NAME=`echo $URL | rev | cut -d "/" -f 1 | \
+         cut -d "." -f 2- | rev`
+
+   wget --no-check-certificate \
+        -P $TMPDIR $URL > /dev/null 2>&1
+
+   PAGES=`echo $2 | tr -d [:alpha:]`
+   if [ `echo $PAGES | wc -c` -le 1 ]; then
+    PAGES=-
+   fi
+
+   SCALE=`echo $3 | sed 's/[^0-9\.]*//g'`
+   if [ `echo $SCALE | wc -c` -le 1 ]; then
+    SCALE=1
+   fi
+
+ # -------------------------------------------------------------------- #
+
+   for PDF in `find . -name "${NAME}.pdf" | head -1`
+    do
+       writeTeXsrc "\includepages{$PDF}{$PAGES}{$SCALE}"
+   done
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function INCLUDEPAGESPLUS() {
+
+   URL=$1
+
+   NAME=`echo $URL | rev | cut -d "/" -f 1 | \
+         cut -d "." -f 2- | rev`
+
+   wget --no-check-certificate \
+        -P $TMPDIR $URL > /dev/null 2>&1
+
+   PAGES=`echo $2 | tr -d [:alpha:]`
+   if [ `echo $PAGES | wc -c` -le 1 ]; then
+    PAGES=-
+   fi
+
+   SCALE=`echo $3 | sed 's/[^0-9\.]*//g'`
+   if [ `echo $SCALE | wc -c` -le 1 ]; then
+    SCALE=1
+   fi
+
+   OFFSET=`echo $4 | sed 's/_/ /g'`
+ # echo $OFFSET
+   TRIM=`echo $5 | sed 's/_/ /g'`
+ # echo $TRIM
+   TITLE=`echo $6 | cut -d "=" -f 2 | sed 's/_/ /g'`
+ # echo $TITLE
+
+ # -------------------------------------------------------------------- #
+
+   for PDF in `find . -name "${NAME}.pdf" | head -1`
+    do
+       TITLENAME=`echo $TITLE | \
+                  sed 's/[^a-zA-Z0-9 ]//g' | \
+                  sed 's/ /_/g' | \
+                  tr [:upper:] [:lower:]`
+ 
+       # echo $TITLENAME >> titlenames.txt
+      
+       CUSTOMSTY=`find . -name "${TITLENAME}.sty" | \
+                  cut -d "/" -f 2-`
+    
+       if [ `echo $CUSTOMSTY | wc -c` -gt 3 ]; then
+       writeTeXsrc "\input{$CUSTOMSTY}"
+       else
+       writeTeXsrc "\input{lib/tex/interview_reset.sty}"
+       fi
+ 
+       writeTeXsrc "\includepagesplus{$PDF}{$PAGES}{$SCALE}{$OFFSET}{$TRIM}{$TITLE}"
+   done
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function DOUBLEPAGE() {
+
+   URL=$1
+
+   ROTATE=`echo $2 | sed 's/[^0-9-]*//g'`
+   if [ `echo $ROTATE | wc -c` -le 2 ]; then
+    ROTATE=0
+   fi
+
+   NAME=`echo $URL | rev | cut -d "/" -f 1 | \
+         cut -d "." -f 2- | rev`
+
+   if [ ! -f $TMPDIR/${NAME}.pdf ]; then
+
+        wget --no-check-certificate \
+             -P $TMPDIR $URL > /dev/null 2>&1
+
+   fi
+
+ # -------------------------------------------------------------------- #
+
+   for PDF in `find . -name "${NAME}.pdf" | head -1`
+    do
+       writeTeXsrc "\doublepage{$PDF}{$ROTATE}"
+   done
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function VFILL() {
+
+  writeTeXsrc "\vfill"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function BIGSKIP() {
+
+  writeTeXsrc "\bigskip"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function SMALLSKIP() {
+
+  writeTeXsrc "\smallskip"
+
+}
+
+## --------------------------------------------------------------------------- #
+#
+#function COVERGRAFIK() {
+#
+#  writeTeXsrc "\emptypage"
+#  writeTeXsrc "\cleardoublepage"
+#  GRAFIK $1 fullpage 1 0
+#
+#}
+#
+## --------------------------------------------------------------------------- #
+
+function TABLEOFCONTENTS(){
+
+  writeTeXsrc "\cleardoublepage"
+  writeTeXsrc "\setcounter{tocdepth}{0}"
+  writeTeXsrc "\tableofcontents"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function NEWPAGE(){
+
+  writeTeXsrc "\newpage"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function RESETFONT(){
+
+  writeTeXsrc "\resetfont"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function SCALEFONT(){
+
+  writeTeXsrc "\scalefont{$1}"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function CLEARTOLEFTPAGE(){
+
+  writeTeXsrc "\cleartoleftpage"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function CLEARDOUBLEPAGE(){
+
+  writeTeXsrc "\cleardoublepage"
+
+}
+
+# --------------------------------------------------------------------------- #
+function LABEL(){
+
+  LABEL=`echo $1 | sed 's/_/ /g' | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
+  writeTeXsrc "\flag{$LABEL}"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function PAGESTYLE() {
+
+  if [ X$1 = Xreset ]; then
+
+  writeTeXsrc "\clearpage"
+  writeTeXsrc "\resetpagestyle"
+
+  else
+
+  writeTeXsrc "\clearpage"
+  writeTeXsrc "\pagestyle{$1}"
+
+
+  fi
+}
+
+# --------------------------------------------------------------------------- #
+
+function HIDDENKEYWORDS() {
+ 
+  KEYWORDS=$1
+  for KEYWORD in `echo $KEYWORDS | sed 's=|= =g'`
+   do
+      KEYWORD=`echo $KEYWORD | sed 's/_/ /g' | \
+               sed "s/^ *//g" | sed "s/ *$//g"`
+      writeTeXsrc "\index{$KEYWORD}"
+  done
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function HIDDENTITLE() {
+ 
+  TITLE=`echo $1 | sed 's/_/ /g' | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
+  writeTeXsrc "\newpage"
+  writeTeXsrc "\invisiblechapter{$TITLE}"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function MEANWHILE() {
+ 
+  HAPPENING=`echo $1 | sed "s/^_*//" | sed "s/_*$//"`
+  COLLECT=
+
+  for CHARACTER in `echo $HAPPENING | sed 's/./ &/g'`
+   do
+      COLLECT=$COLLECT$CHARACTER"\hfill "
+  done
+
+  COLLECT=`echo $COLLECT | sed 's/_/ /g' | sed 's/\\\hfill$//g'`
+
+  writeTeXsrc "\bigskip"
+# writeTeXsrc "{\fontfamily{ocr}\selectfont ${COLLECT} }"
+  writeTeXsrc "{\scalefont{.7}\textit{ ${COLLECT} }}"
+  writeTeXsrc "\bigskip"
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+# --------------------------------------------------------------------------- #
+
+function LOOKTHROUGHPAGE(){
+
+   URL=$1
+
+   NAME=`echo $URL | rev | cut -d "/" -f 1 | \
+         cut -d "." -f 2- | rev`
+
+   if [ ! -f $TMPDIR/${NAME}.* ]; then
+        wget --no-check-certificate \
+             -P $TMPDIR $URL > /dev/null 2>&1
+   fi
+
+   FILE=`find . -name "${NAME}.*" | head -1`
+   TYPE=`echo $FILE | rev | cut -d "." -f 1 | rev`
+
+   if [ "X$TYPE" = "Xjpg" ]; then
+         convert $FILE $TMPDIR/`basename $NAME | cut -d "." -f 1`.pdf
+   fi
+ # -------------------------------------------------------------------- #
+   IMG=`find . -name "${NAME}.pdf" | head -1`
+
+   if [ `echo $IMG | wc -c` -gt 2 ]; then
+
+   rgb2cmyk $IMG
+   IMG=`find . -name "${NAME}.pdf" | head -1`
+
+         PDF=${IMG} ; SUPERTMP=${RANDOM}.tex
+     PDFINFO=`identify -format "%wx%h" "$PDF"[0]`
+    PDFWIDTH=`echo $PDFINFO | cut -d "x" -f 1`
+   PDFHEIGHT=`echo $PDFINFO | cut -d "x" -f 2`
+ 
+   echo "\documentclass{memoir}"                 >  $SUPERTMP
+   echo "\usepackage{graphicx}"                  >> $SUPERTMP
+   echo "\usepackage{fullpage}"                  >> $SUPERTMP
+   echo "\usepackage{geometry}"                  >> $SUPERTMP
+   echo "\geometry{paperwidth=${PDFWIDTH}pt,"    >> $SUPERTMP
+   echo "          paperheight=${PDFHEIGHT}pt}"  >> $SUPERTMP
+   echo "\setlength{\textwidth}{\paperwidth}"    >> $SUPERTMP
+   echo "\setlength{\textheight}{\paperheight}"  >> $SUPERTMP
+   echo "\newlength{\pdfwidth}"                  >> $SUPERTMP
+   echo "\newlength{\pdfheight}"                 >> $SUPERTMP
+   echo "\setlength{\pdfwidth}{\paperwidth}"     >> $SUPERTMP
+   echo "\setlength{\pdfheight}{\paperheight}"   >> $SUPERTMP
+   echo "\setlength{\oddsidemargin}{-1.2in}"     >> $SUPERTMP
+   echo "\setlength{\evensidemargin}{-1.2in}"    >> $SUPERTMP
+   echo "\setlength{\topmargin}{-1in}"           >> $SUPERTMP
+   echo "\pagestyle{empty}"                      >> $SUPERTMP
+   echo "\begin{document}"                       >> $SUPERTMP
+   echo "\includegraphics[width=-1\pdfwidth,"    >> $SUPERTMP
+   echo "height=\pdfheight,page=1]{$PDF}"        >> $SUPERTMP
+   echo "\end{document}"                         >> $SUPERTMP
+  
+  #pdflatex -output-directory=$TMPDIR $SUPERTMP
+   pdflatex -interaction=nonstopmode \
+            -output-directory $TMPDIR \
+            $SUPERTMP  > /dev/null
+
+   pdftk $TMPDIR/${SUPERTMP%.*}.pdf burst output \
+         ${PDF%.*}_MIRROR.pdf
+  
+   rm $SUPERTMP doc_data.txt
+
+     if [ "X$2" == "XNEGATIVE" ]; then
+  
+     PDFSRC=${PDF%.*}_MIRROR.pdf
+     SVG=${PDFSRC%.*}.svg
+     MOD=${PDFSRC%.*}_MOD.pdf
+  
+     inkscape --export-plain-svg=$SVG \
+              $PDFSRC
+  
+     sed -re 's/#[Ff]{6}/XxXxXx/g' $SVG | \
+     sed -re 's/#[a-fA-F0-9]{6}/#ffffff/g' | \
+     sed 's/XxXxXx/#000000/g'      > tmp.svg
+  
+     inkscape --export-pdf=$MOD \
+              tmp.svg
+  
+     rm tmp.svg $SVG
+  
+     writeTeXsrc "\lookthroughpage{$IMG}{${MOD}}"
+  
+     else
+  
+     writeTeXsrc "\lookthroughpage{$IMG}{${PDF%.*}_MIRROR.pdf}"
+  
+     fi
+   fi
+}
+
+# --------------------------------------------------------------------------- #
+
+function COVERGRAFIK() {
+
+  writeTeXsrc "\emptypage"
+# LOOKTHROUGHPAGE $1 NEGATIVE
+  LOOKTHROUGHPAGE $1
+}
+
+# --------------------------------------------------------------------------- #
+
+function INLINE() {
+
+  INPUT=`echo $1 | sed 's/_/ /g'`
+  writeTeXsrc "$INPUT"
+
+}
+
+# --------------------------------------------------------------------------- #
+

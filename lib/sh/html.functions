@@ -36,6 +36,12 @@
   sed "s/<\/p>//g"                       | # 
   sed 's/zDf7WV362LoP/%/g'               | # BACK TO ORIGINAL
   sed 's/code>/tt>/g'                    | #
+  sed -e 's/^% TITLE:/%TXIXTXLXE/g' \
+      -e '/^%TXIXTXLXE/s/ /_/g' \
+      -e 's/%TXIXTXLXE/% TITLE:/g'       | # REMOVE SPACES FROM TITLE
+  sed -e 's/^% LABEL:/%LXAXBXEXL/g' \
+      -e '/^%LXAXBXEXL/s/ /_/g' \
+      -e 's/%LXAXBXEXL/% LABEL:/g'       | # REMOVE SPACES FROM LABEL
   tee > $MDSHMOD                           # WRITE TO FILE
 
 # cp $MDSHMOD `date +%s`.mdsh
@@ -97,6 +103,30 @@ function NOWSPEAKING() {
    writeTeXsrc "$END"
    writeTeXsrc "$START"
    END="</p>"
+}
+
+# --------------------------------------------------------------------------- #
+
+function TITLE() {
+
+  # NOT WORKING FOR NESTED DOCUMENTS
+  # TITLE=`grep "^% TITLE:" $MDSHMOD |  tail -1 | \
+  #        cut -d ":" -f 2- | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
+
+  TITLE=`echo $1 | sed 's/_/ /g' | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
+
+  writeTeXsrc "<h1>$TITLE</h1>"
+
+}
+
+# --------------------------------------------------------------------------- #
+
+function LABEL(){
+
+  LABEL=`echo $1 | sed 's/_/ /g' | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
+
+  writeTeXsrc "<h2>$LABEL</h2>"
+
 }
 
 # --------------------------------------------------------------------------- #

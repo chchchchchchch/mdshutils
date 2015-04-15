@@ -179,7 +179,6 @@ function TITLE() {
   # TITLE=`grep "^% TITLE:" $MDSHMOD |  tail -1 | \
   #        cut -d ":" -f 2- | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
 
-
   TITLE=`echo $1 | sed 's/_/ /g' | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
 
   writeTeXsrc "\section{$TITLE}"
@@ -187,3 +186,15 @@ function TITLE() {
 }
 
 # --------------------------------------------------------------------------- #
+
+function LABEL(){
+
+  LABEL=`echo $1 | sed 's/_/ /g' | sed "s/^[ \t]*//" | sed "s/[ \t]*$//"`
+
+  writeTeXsrc "\medskip"
+  writeTeXsrc "\textbf{\emph{$LABEL}}"
+
+}
+
+# --------------------------------------------------------------------------- #
+

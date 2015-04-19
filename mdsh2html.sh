@@ -1,108 +1,136 @@
 #!/bin/bash
 
-#  THIS IS A FRAGILE SYSTEM, HANDLE WITH CARE.                                #
-# --------------------------------------------------------------------------- #
-#                                                                             #
-#  Copyright (C) 2015 LAFKON/Christoph Haag                                   #
-#                                                                             #
-#  mdsh2html.sh is free software: you can redistribute it and/or modify       #
-#  it under the terms of the GNU General Public License as published by       #
-#  the Free Software Foundation, either version 3 of the License, or          #
-#  (at your option) any later version.                                        #
-#                                                                             #
-#  mdsh2html.sh is distributed in the hope that it will be useful,            #
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of             #
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                       #
-#  See the GNU General Public License for more details.                       #
-#                                                                             #
+# THIS IS A FRAGILE SYSTEM, HANDLE WITH CARE.                                #
 # --------------------------------------------------------------------------- #
 
+  MAIN=$1
+  TMPDIR=tmp
   OUTDIR=___/html
-  PDFDIR=tmp ; TMPDIR=tmp
-  URLS=lib/urls/conversations_01.list
 
+  HTMLNAME=`echo $1 | sed 's/[^a-zA-Z0-9 ]//g' | sed 's/http//g'`
+  HTML=$OUTDIR/${HTMLNAME}.html
 
-  EMPTYLINE="EMPTY-LINE-EMPTY-LINE-EMPTY-LINE-TEMPORARY-NOT"
 # --------------------------------------------------------------------------- #
-  FNCTSBASIC=lib/sh/html.functions
-  FUNCTIONS=$TMPDIR/collect.functions
+# INTERACTIVE CHECKS 
+# --------------------------------------------------------------------------- #
+# if [ -f $PDF ]; then
+#      echo "$PDF does exist"
+#      read -p "overwrite ${PDF}? [y/n] " ANSWER
+#      if [ X$ANSWER != Xy ] ; then echo "Bye"; exit 0; fi
+# fi
 
-  cat $FNCTSBASIC  >  $FUNCTIONS
-# APPEND OPTIONAL FUNCTION SET (IF GIVEN)
-  if [[ ! -z "$1" ]]; then cat $1 >> $FUNCTIONS ; fi
+  echo "converting $1"
+
+# =========================================================================== #
+# CONFIGURATION                                                               #
 # --------------------------------------------------------------------------- #
-# INCLUDE FUNCTIONS
-# --------------------------------------------------------------------------- #
+
+  FUNCTIONSBASIC=lib/sh/basic.1504191646.functions
+   FUNCTIONSPLUS=lib/sh/html.conversations.1504192033.functions
+       FUNCTIONS=$TMPDIR/functions.tmp
+  cat $FUNCTIONSBASIC $FUNCTIONSPLUS > $FUNCTIONS
+
   source $FUNCTIONS
 
 # --------------------------------------------------------------------------- #
-# ACTION HAPPENS HERE!
-# =========================================================================== #
-
-  for URL in `cat $URLS`
-   do
-     echo $URL
-     HTMLNAME=`echo $URL | rev | cut -d "/" -f 4 | rev`
-     HTML=${OUTDIR}/${HTMLNAME}.html
-     MAIN=$URL
-
-     TEXBODY=$TMPDIR/$RANDOM.tex
-     TMPTEX=$TEXBODY
-     if [ -f $TMPTEX ]; then rm $TMPTEX ; fi
-
-     mdsh2TeX $MAIN
-
-# =========================================================================== #
-
-     echo "<html><body>" >  $HTML
-     cat $TEXBODY        >> $HTML
-     echo "</p>"         >> $HTML
-
+  PANDOCACTION="pandoc --ascii -r markdown -w html"
 # --------------------------------------------------------------------------- #
 # FOOTNOTES
+# \footnote{the end is near, the text is here}
 # --------------------------------------------------------------------------- #
-
-     echo "<hr/>"   >> $HTML
-     echo "<ol>"    >> $HTML
-
-     COUNT=1
-     for FOOTNOTE in `sed 's/\[\^]{/\n&/g' $HTML | #
-                      sed 's/ /5P4C3XX/g'         | #
-                      sed 's/}/&\n/'              | # 
-                      grep "^\[\^]{"`
-      do
-          ID=`echo $FOOTNOTE | md5sum | cut -c 1-8`
-
-          FOOTNOTETEXT=`echo $FOOTNOTE  | #
-                        cut -d "{" -f 2 | #
-                        cut -d "}" -f 1 | #
-                        sed 's/5P4C3XX/ /g'`       
-
-          FOOTNOTE=`echo $FOOTNOTE       | #
-                    sed 's/5P4C3XX/ /g'  | #
-                    sed 's/\[/\\\[/g'    | #
-                    sed 's/|/\\|/g'`
-
-          OLDFOOTNOTE=$FOOTNOTE
-          NEWFOOTNOTE="<sup><a href=\"#$ID\">$COUNT</a><\/sup>"
-          sed -i "s|$OLDFOOTNOTE|$NEWFOOTNOTE|g" $HTML
-
-          echo "<li id=\"$ID\"> $FOOTNOTETEXT </li>" >> $HTML
-
-          COUNT=`expr $COUNT + 1` 
-     done
-
-     echo "</ol>"          >> $HTML
-
-     echo "</body></html>" >> $HTML
-
-  done
-
+  FOOTNOTEOPEN="FOOTNOTEOPEN$RANDOM{" ; FOOTNOTECLOSE="}FOOTNOTECLOSE$RANDOM"
+# CITATIONS
+# \cite{phillips:2004:vectoraesthetic}
+# --------------------------------------------------------------------------- #
+  CITEOPEN="CITEOPEN$RANDOM" ; CITECLOSE="CITECLOSE$RANDOM"
+# \cite[1-8]{phillips:2004:vectoraesthetic}
+# --------------------------------------------------------------------------- #
+  CITEPOPEN="$CITEOPEN" ; CITEPCLOSE="$CITECLOSE"
 # =========================================================================== #
 
 # --------------------------------------------------------------------------- #
-# CLEAN UP
+# ACTION HAPPENS HERE!
 # --------------------------------------------------------------------------- #
+
+  mdsh2src $MAIN
+
+# --------------------------------------------------------------------------- #
+# EDIT RAW/PANDOC HTML
+# --------------------------------------------------------------------------- #
+
+# REMOVE NEWLINES (EASIFY PARSING)
+  sed -i ':a;N;$!ba;s/\n//g'                        $SRCDUMP
+# UNNTEST BLOCKQUOTES
+  sed -i 's/<blockquote><p>/<blockquote>/g'         $SRCDUMP
+  sed -i 's/<\/p><\/blockquote>/<\/blockquote>/g'   $SRCDUMP
+# NEWLINE FOR </p>
+  sed -i 's/<\/p>/<\/p>\n/g'                        $SRCDUMP
+# UNNEST <h1>
+  sed -i -r '/^<p><h1>.*<\/h1><\/p>$/s/<[\/]?p>//g' $SRCDUMP
+# 2 NEWLINES FOR <p
+  sed -i 's/<p/\n\n<p/g'                            $SRCDUMP
+# REMOVE EMPTY PARAGRAPHS
+# sed -i 's/<p><\/p>//g'                            $SRCDUMP
+# REMOVE EMPTY PARAGRAPHS EVEN WITH A CLASS
+  sed -i -r '/^<p.*+><\/p>$/s/^.*$//g'              $SRCDUMP
+# DELETE <p> AND </p> IF LINE STARTS AND ENDS WITH HTML COMMENT
+  sed -i '/^<p><!--/s/--><\/p>$/-->\n/g'            $SRCDUMP 
+  sed -i '/-->$/s/^<p><!--/\n<!--/g'                $SRCDUMP
+# ADD NEWLINE AFTER </p>
+  sed -i 's/<\/p>/&\n/g'                            $SRCDUMP
+# DELETE CONSECUTIVE EMPTY LINES
+  sed -i '/^$/N;/^\n$/D'                            $SRCDUMP
+# MAKE <code> <tt>
+  sed -i 's/<code>/<tt>/g'                          $SRCDUMP
+  sed -i 's/<\/code>/<\/tt>/g'                      $SRCDUMP
+
+# JUST REMOVE BIBLIOGRAPHY REFERENCES (SO FAR)
+  sed -i "s/$CITEOPEN/\n&/g"     $SRCDUMP
+  sed -i "s/$CITECLOSE/&\n/g"    $SRCDUMP
+  sed -i "/^$CITEOPEN/s/^.*$//g" $SRCDUMP
+
+# --------------------------------------------------------------------------- #
+# MAKE FOOTNOTES
+# --------------------------------------------------------------------------- #
+  echo "<hr/>"           >> $SRCDUMP
+  echo "<ol>"            >> $SRCDUMP
+  COUNT=1
+  for FOOTNOTE in `sed "s/$FOOTNOTEOPEN/\n&/g" $SRCDUMP | #
+                   sed 's/ /5P4C3XX/g'                  | #
+                   sed "s/$FOOTNOTECLOSE/&\n/"          | # 
+                   grep "^$FOOTNOTEOPEN"`
+   do
+      ID=`echo $FOOTNOTE | md5sum | cut -c 1-8`
+      FOOTNOTETXT=`echo $FOOTNOTE    | #
+                   cut -d "{" -f 2   | #
+                   cut -d "}" -f 1   | #
+                   sed 's/5P4C3XX/ /g'`
+      FOOTNOTE=`echo $FOOTNOTE       | #
+                sed 's/5P4C3XX/ /g'  | #
+                sed 's/\[/\\\[/g'    | #
+                sed 's/|/\\|/g'`
+      OLDFOOTNOTE=$FOOTNOTE
+      NEWFOOTNOTE="<sup><a href=\"#$ID\">$COUNT</a><\/sup>"
+      sed -i "s|$OLDFOOTNOTE|$NEWFOOTNOTE|g" $SRCDUMP
+      echo "<li id=\"$ID\"> $FOOTNOTETXT </li>" >> $SRCDUMP
+      COUNT=`expr $COUNT + 1`
+  done
+  echo "</ol>"           >> $SRCDUMP
+
+  sed -i "s|$FOOTNOTECLOSE||g" $SRCDUMP # WORKAROUND (BUG!!)
+
+# --------------------------------------------------------------------------- #
+# WRITE HTML
+  echo "<html><body>"    >  $HTML
+  fold -s -w 75 $SRCDUMP >> $HTML
+  echo "</body></html>"  >> $HTML
+
+# DEBUG
+# cp $HTML dev.html
+
+# =========================================================================== #
+# CLEAN UP
+
   rm $TMPDIR/*.*
 
 exit 0;

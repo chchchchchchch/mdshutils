@@ -88,6 +88,7 @@ function mdsh2src() {
 
   # TEMPORARY PROTECTORS (FOO)
   # ---------------------------------
+    EMPTYLINE=EMPTY${RANDOM}LINE$MKLONG
     BREAKFOO=BR${RANDOM}EAK
     FN1FOO=FN${RANDOM}1 ; FN2FOO=FN${RANDOM}2
     CICOMMON=CM$RANDOM
@@ -108,6 +109,7 @@ function mdsh2src() {
 
 
   cat $PROTECTED                     | # USELESS USE OF CAT
+  sed "s/^ *$/$EMPTYLINE$BREAKFOO/g" | # PROTECT EMPTY LINES
   sed ":a;N;\$!ba;s/\n/$BREAKFOO/g"  | # REMOVE LINEBREAKS (TEMPORARY)
   sed "s/\[\^\]{/\n$FN1FOO/g"        | # PROTECT (FOONOTE OPEN)
   sed "/^$FN1FOO/s/}/\n$FN2FOO/"     | # PROTECT (FOOTNOTE CLOSE)
@@ -123,6 +125,7 @@ function mdsh2src() {
   sed "s/$CI2FOO/$CITECLOSE/g"       | # SUBSTITUTE WITH TARGET MARKUP 
   sed "s/$CP1FOO/$CITEPOPEN/g"       | # SUBSTITUTE WITH TARGET MARKUP 
   sed "s/$CP2FOO/$CITEPCLOSE/g"      | # SUBSTITUTE WITH TARGET MARKUP 
+
   tee > $MDSHMOD                       # WRITE TO FILE
 
 
@@ -146,9 +149,7 @@ function mdsh2src() {
 # SOME CLEAN UP
 # --------------------------------------------------------------------------- #
 # REMOVE LEADING BLANKS
-  sed -i "s/^[ \t]*//" $MDSHMOD
-
-
+  sed -i "s/^[ \t]*//"         $MDSHMOD
 
 # --------------------------------------------------------------------------- #
 # PARSE COMMANDS 
@@ -193,6 +194,12 @@ function mdsh2src() {
         fi
       # --------------------------------------------------- # 
   done
+
+
+  sed -i "s/$EMPTYLINE/\n\n/g" $SRCDUMP  # RESTORE EMPTY LINES
+  sed -i '/./,/^$/!d'          $SRCDUMP  # REMOVE CONSECUTIVE BLANK LINES
+
+
 
   }
 # --------------------------------------------------------------------------- #

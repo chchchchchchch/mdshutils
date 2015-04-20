@@ -1,0 +1,202 @@
+<html><body>
+
+<h1> The construction of a book (Aether9)</h1>
+
+<p>This brief interview with Ludivine Loiseau and Pierre Marchand from OSP 
+was made in <strong>December 2012</strong> by editor and designer Manuel 
+Schmalstieg. It unravels the design process of <em>Aether9</em>, a book 
+based on the archives of a collaborative adventure exploring the danger 
+zones of networked audio-visual live performance. The text was published 
+in that same publication.</p>
+
+<p class="ms">Can you briefly situate the collective work of Open Source 
+Publishing (OSP)?</p>
+
+<p class="ll">OSP is a working group producing graphic design objects 
+using only Libre and/or Open Source software. Founded in 2006 in the frame 
+of the arts organisation Constant <sup><a href="#248bdea1">1</a></sup>, 
+the OSP caravan consists today of a dozen individuals of different 
+backgrounds and practices.</p>
+
+<p class="ms">Since how long are you working as a duo, and as a team in 
+OSP?</p>
+
+<p class="pm">3 to 4 years.</p>
+
+<p class="ms">And how many books have you conceived?</p>
+
+<p class="pm">As a team, it&#8217;s our first 'real' book. We previously 
+worked together on a somewhat similar project of archive exploration, but 
+without printed material in the end. <sup><a 
+href="#84f337b3">2</a></sup></p>
+
+<p class="ms">Similar in the type of content or in the process?</p>
+
+<p class="pm">The process: we developed scripts to 'scrap' the project 
+archives, but it&#8217;s output was more abstract; we collected the fonts 
+used in all the files and produced a graph from this process. These 
+archives weren&#8217;t structured, so the exploration was less linear.</p>
+
+<p class="ms">You rapidly chose TeX/ConTeXt as a software environment to 
+produce this book. Was it an obvious choice given the nature of the 
+project, or did you hesitate between different approaches?</p>
+
+<p class="ll">The construction of the book focused on two axes/threads: 
+chronology and a series of 'trace-route' keywords. Within this approach of 
+reading and navigation using cross-references, ConTeXt appeared as an 
+appropriate tool.</p>
+
+<p class="ms">The world of TeX <sup><a href="#91566f33">3</a></sup> is 
+very intriguing, in particular for graphic designers. It seems to me that 
+it is always a struggle to push back the limits of what is 'intended' by 
+the software.</p>
+
+<p class="pm">ConTeXt is a constant fight! I wouldn&#8217;t say the same 
+about other TeX system instances. With ConTeXt, we found ourselves facing 
+a very personal project, because composition decisions are hardcoded to 
+the liking of the package main maintainer. And when we clash with these 
+decisions, we are in the strange position of using a tool while not 
+agreeing with its builder.</p>
+
+<p class="ll">As a concrete example, we could mention the automatic line 
+spacing adjustments. It was a struggle to get it right on the lines that 
+include keywords typeset with our custom 'traced' fonts. ConTeXt tried to 
+do better, and was increasing the line height of those words, as if it 
+wanted to avoid collisions.</p>
+
+<p class="ms">Were you ever worried that what you wanted to obtain was not 
+doable? Did you reject some choices &#8211; in the graphic design, the 
+layout, the structure &#8211; because of software limitations?</p>
+
+<p class="ll">Yes. Opting for a two column layout appeared to be quite 
+tough when filling in the content, as it introduced many gaps. At some 
+point we decided to narrow the format on a single column. To obtain the 
+two columns layout in the final output, the whole book was recomposed 
+during the pdf-construction, through OSPImpose.</p>
+
+<p class="pm">This allowed us to make micro adjustments in the end of the 
+production process, while introducing new games, such as shifting the 
+images on double pages.</p>
+
+<p class="ms">What is OSPImpose?</p>
+
+<p class="pm">It&#8217;s a re-writing of a pdf imposition software that I 
+wrote a couple years ago for PoDoFo.</p>
+
+<p class="ms">Again regarding ConTeXt: this system was used for other OSP 
+works &#8211; notably for the book <em>Verbindingen/Jonctions 10; Tracks 
+in electr(on)ic fields</em>. <sup><a href="#b12463de">4</a></sup> Is it 
+currently the main production tool at OSP?</p>
+
+<p class="pm">It&#8217;s more like an in-depth initiation journey!</p>
+
+<p class="ll">But it hasn&#8217;t become a standard in our workflow yet. 
+In fact, each new important book layout project raises each time the 
+question of the tool. Scribus and LibreOffice (spreadsheet) are also part 
+of our book making toolbox.</p>
+
+<p class="ms">During our work session with you at Constant Variable, we 
+noticed that it was difficult to install a sufficiently complete 
+TeX/ConTeXt/Python environment to be able to generate the book. Is 
+Pierre&#8217;s machine still the only one, or did you manage to set it up 
+on other computers?</p>
+
+<p class="pm">Now we all have similar setups, so it&#8217;s a generalized 
+generation. But it&#8217;s true that this represented a difficulty at some 
+times.</p>
+
+<p class="ms">The source code and the Python scripts created for the book 
+are publicly accessible on the OSP Git server. Would these sources be 
+realistically re-usable? Could other publication projects use parts of the 
+code ? Or, without any explicit documentation, would it be highly 
+improbable?</p>
+
+<p class="ll">Indeed, the documentation part is still on the to-do list. 
+Yet a large part of the code is quite directly reusable. The code allows 
+to parse different types of files. E-mails and chat-logs are often found 
+in project archives. Here the Python scripts allows to order them 
+according to date information, and will automatically assign a style to 
+the different content fields.</p>
+
+<p class="pm">The code itself is a documentation source, as much on 
+concrete aspects, such as e-mail parsing, than on a possible architecture, 
+on certain coding motives, etc. And most importantly, is consists in a 
+form of common experience.</p>
+
+<p class="ms">Do you think you will reuse some of the general 
+functions/features of archive parsing for other projects ?</p>
+
+<p class="pm">Hard to say. We haven&#8217;t anything in perspective that 
+is close to the <em>Aether9</em> project. But for sure, if the need of 
+such treatment comes up again, we&#8217;ll retrieve these software 
+components.</p>
+
+<p class="ll">Maybe for a publication/compilation of OSP&#8217;s 
+adventures.</p>
+
+<p class="ms">Have there been 'revelations', discoveries of unsuspected 
+Python/ConText features during this development?</p>
+
+<p class="pm">I can&#8217;t recall having this kind of pleasure. The 
+revelation, at least from my point of view, happened in the very rich 
+articulation of a graphical intention enacted in programming objects. It 
+remains a kind of uncharted territory, exploring it is always an exciting 
+adventure.</p>
+
+<p class="ms">Three fonts are used in the book: Karla, Crimson and Consola 
+Mono. Three pretty recent fonts, born in the webfonts contexts I believe. 
+What considerations brought you to this choice?</p>
+
+<p class="ll">Our typographical choices and researches lead us towards 
+fonts with different style variations. As the textual content is quite 
+rich and spreads on several layers, it was essential to have variation 
+possibilities. Also, each project brings the opportunity to test new fonts 
+and we opted for recently published fonts, indeed published, amongst 
+others, on the Google font directory. Yet Karla and Crimson aren&#8217;t 
+fonts specifically designed for a web usage. Karla is one of the rare 
+libre grotesque fonts, and it&#8217;s other specificity it that it 
+includes Tamil glyphs.</p>
+
+<p class="ms">Apart from the original glyphs specially created for this 
+book, you drew the &#199; glyph that was missing to Karla &#8230; Is it 
+going to be included to its official distribution?</p>
+
+<p class="ll">Oh, that&#8217;s a proposal for Jonathan Pinhorn. We 
+haven&#8217;t contacted him yet. For the moment, this cedilla has been 
+snatched from the traced variant collections.</p>
+
+<p class="ms">Were there any surprises when printing? I am thinking in 
+particular of your choice of a colored ink instead of the usual black, or 
+to the low res quality (72dpi) of most of the images.</p>
+
+<p class="pm">At the end of the process, the spontaneous decision to 
+switch to blue ink was a guaranteed source of surprise. We were confident 
+that it wouldn&#8217;t destroy the book, and we surely didn&#8217;t take 
+too many risks since we were working with low res images. But we 
+weren&#8217;t sure how the images would react to such an offense. It was 
+an great surprise to see that it gave the book a very special radiance.</p>
+
+<p class="ms">What are your next projects?</p>
+
+<p class="ll">We are currently operating as an invited collective at the 
+Valence Academy of Fine Arts in the frame of a series of workshops named 
+'Up pen down'. We&#8217;re preparing a performance for the Balsamine 
+theatre <sup><a href="#2450f01c">5</a></sup> on the topic of 
+Bootstrapping. In April we will travel as a group to Madrid to LGRU 
+<sup><a href="#25887466">6</a></sup> and LGM <sup><a 
+href="#c51c27dc">7</a></sup>. We also continually work on 
+'Co-position&#8221;', a project for building a post-gutenberg 
+typographical tool.</p>
+
+<hr/>
+<ol>
+<li id="248bdea1"> http://www.constantvzw.org  </li>
+<li id="84f337b3"> http://www.ooooo.be/interpunctie/  </li>
+<li id="91566f33"> a software written in 1978 by Donald Knuth  </li>
+<li id="b12463de"> distinguished by the Fernand Baudin Prize 2009  </li>
+<li id="2450f01c"> http://www.balsamine.be/  </li>
+<li id="25887466"> http://lgru.net/  </li>
+<li id="c51c27dc"> the international Libre Graphics Meeting: 
+http://libregraphicsmeeting.org/2013/  </li>
+</ol>
+</body></html>

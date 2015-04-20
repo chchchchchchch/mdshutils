@@ -50,35 +50,36 @@
 # --------------------------------------------------------------------------- #
 
 # REMOVE NEWLINES (EASIFY PARSING)
-  sed -i ':a;N;$!ba;s/\n//g'                        $SRCDUMP
+  sed -i ':a;N;$!ba;s/\n//g'                                         $SRCDUMP
 # UNNTEST BLOCKQUOTES
-  sed -i 's/<blockquote><p>/<blockquote>/g'         $SRCDUMP
-  sed -i 's/<\/p><\/blockquote>/<\/blockquote>/g'   $SRCDUMP
+  sed -i 's/<blockquote><p>/<blockquote>/g'                          $SRCDUMP
+  sed -i 's/<\/p><\/blockquote>/<\/blockquote>/g'                    $SRCDUMP
 # NEWLINE FOR </p>
-  sed -i 's/<\/p>/<\/p>\n/g'                        $SRCDUMP
-# UNNEST <h1>
-  sed -i -r '/^<p><h1>.*<\/h1><\/p>$/s/<[\/]?p>//g' $SRCDUMP
+  sed -i 's/<\/p>/<\/p>\n/g'                                         $SRCDUMP
+# UNNEST HEADLINES
+  sed -i -r '/^<p><h[1-9]?>.*<\/h[1-9]?><\/p>$/s/<[\/]?p>//g'        $SRCDUMP
 # 2 NEWLINES FOR <p
-  sed -i 's/<p/\n\n<p/g'                            $SRCDUMP
+  sed -i 's/<p/\n\n<p/g'                                             $SRCDUMP
 # REMOVE EMPTY PARAGRAPHS
-# sed -i 's/<p><\/p>//g'                            $SRCDUMP
+# sed -i 's/<p><\/p>//g'                                             $SRCDUMP
 # REMOVE EMPTY PARAGRAPHS EVEN WITH A CLASS
-  sed -i -r '/^<p.*+><\/p>$/s/^.*$//g'              $SRCDUMP
+# # DELETES TOO MUCH sed -i -r '/^<p.*+><\/p>$/s/^.*$//g'            $SRCDUMP
+  sed -i -r 's/<p[^>]*><\/p>//g'                                     $SRCDUMP
 # DELETE <p> AND </p> IF LINE STARTS AND ENDS WITH HTML COMMENT
-  sed -i '/^<p><!--/s/--><\/p>$/-->\n/g'            $SRCDUMP 
-  sed -i '/-->$/s/^<p><!--/\n<!--/g'                $SRCDUMP
+  sed -i '/^<p><!--/s/--><\/p>$/-->\n/g'                             $SRCDUMP 
+  sed -i '/-->$/s/^<p><!--/\n<!--/g'                                 $SRCDUMP
 # ADD NEWLINE AFTER </p>
-  sed -i 's/<\/p>/&\n/g'                            $SRCDUMP
+  sed -i 's/<\/p>/&\n/g'                                             $SRCDUMP
 # DELETE CONSECUTIVE EMPTY LINES
-  sed -i '/^$/N;/^\n$/D'                            $SRCDUMP
+  sed -i '/^$/N;/^\n$/D'                                             $SRCDUMP
 # MAKE <code> <tt>
-  sed -i 's/<code>/<tt>/g'                          $SRCDUMP
-  sed -i 's/<\/code>/<\/tt>/g'                      $SRCDUMP
+  sed -i 's/<code>/<tt>/g'                                           $SRCDUMP
+  sed -i 's/<\/code>/<\/tt>/g'                                       $SRCDUMP
 
 # JUST REMOVE BIBLIOGRAPHY REFERENCES (SO FAR)
-  sed -i "s/$CITEOPEN/\n&/g"     $SRCDUMP
-  sed -i "s/$CITECLOSE/&\n/g"    $SRCDUMP
-  sed -i "/^$CITEOPEN/s/^.*$//g" $SRCDUMP
+  sed -i "s/$CITEOPEN/\n&/g"                                         $SRCDUMP
+  sed -i "s/$CITECLOSE/&\n/g"                                        $SRCDUMP
+  sed -i "/^$CITEOPEN/s/^.*$//g"                                     $SRCDUMP
 
 # --------------------------------------------------------------------------- #
 # MAKE FOOTNOTES
@@ -91,7 +92,7 @@
                    sed "s/$FOOTNOTECLOSE/&\n/"          | # 
                    grep "^$FOOTNOTEOPEN"`
    do
-      ID=`echo $FOOTNOTE | md5sum | cut -c 1-8`
+      ID=`echo $COUNT | md5sum | cut -c 1-8`
       FOOTNOTETXT=`echo $FOOTNOTE    | #
                    cut -d "{" -f 2   | #
                    cut -d "}" -f 1   | #
